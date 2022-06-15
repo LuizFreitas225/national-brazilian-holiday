@@ -29,7 +29,21 @@ namespace NationalBrazilianHolidays.Controllers
           {
               return NotFound();
           }
-            return await _context.Paises.ToListAsync();
+            return await _context.Paises.Select( x => new Pais
+            {
+                Id = x.Id,
+                Nome = x.Nome,
+                Continente = x.Continente,
+                Sigla = x.Sigla,
+                Feriados = x.Feriados.Select(c => new Feriado()
+                {
+                    Id = c.Id,
+                    Nome = c.Nome,
+                    Ano = c.Ano,
+                    Data = c.Data,
+                    
+                }).ToList() }).
+            ToListAsync();
         }
 
         // GET: api/Pais/5
@@ -40,7 +54,21 @@ namespace NationalBrazilianHolidays.Controllers
           {
               return NotFound();
           }
-            var pais = await _context.Paises.FindAsync(id);
+            var pais = await _context.Paises.Where(x => id == x.Id).Select(x => new Pais
+            {
+                Id = x.Id,
+                Nome = x.Nome,
+                Continente = x.Continente,
+                Sigla = x.Sigla,
+                Feriados = x.Feriados.Select(c => new Feriado()
+                {
+                    Id = c.Id,
+                    Nome = c.Nome,
+                    Ano = c.Ano,
+                    Data = c.Data
+
+                }).ToList()
+            }).SingleAsync();
 
             if (pais == null)
             {
@@ -59,7 +87,7 @@ namespace NationalBrazilianHolidays.Controllers
             {
                 return BadRequest();
             }
-
+            pais.Continente = _context.Continentes.Find(pais.Continente.Id);
             _context.Entry(pais).State = EntityState.Modified;
 
             try
@@ -90,6 +118,8 @@ namespace NationalBrazilianHolidays.Controllers
           {
               return Problem("Entity set 'DataBaseContext.Paises'  is null.");
           }
+            pais.Continente = _context.Continentes.Find(pais.Continente.Id);
+
             _context.Paises.Add(pais);
             await _context.SaveChangesAsync();
 

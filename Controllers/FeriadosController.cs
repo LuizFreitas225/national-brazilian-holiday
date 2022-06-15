@@ -29,7 +29,15 @@ namespace NationalBrazilianHolidays.Controllers
           {
               return NotFound();
           }
-            return await _context.Feriados.ToListAsync();
+            return await _context.Feriados.Select(x => new Feriado() { Id = x.Id, Ano =  x.Ano ,
+            Nome = x.Nome,
+                Paises = x.Paises.Select(c => new Pais()
+                {
+                    Continente = c.Continente,
+                    Id = c.Id,
+                    Nome = c.Nome,
+                    Sigla = c.Sigla
+                }).ToList(), Data =  x.Data } ).ToListAsync();
         }
 
         // GET: api/Feriados/5
@@ -40,7 +48,21 @@ namespace NationalBrazilianHolidays.Controllers
           {
               return NotFound();
           }
-            var feriado = await _context.Feriados.FindAsync(id);
+            var feriado = await _context.Feriados.Where(x => id == x.Id).Select(x => new Feriado()
+            {
+                Id = x.Id,
+                Ano = x.Ano,
+                Nome = x.Nome,
+                Paises = x.Paises.Select(c => new Pais()
+                {
+                    Continente = c.Continente,
+                    Id = c.Id,
+                    Nome = c.Nome,
+                    Sigla = c.Sigla
+                }).ToList(),
+                Data = x.Data
+
+            }).SingleAsync();
 
             if (feriado == null)
             {
@@ -59,6 +81,13 @@ namespace NationalBrazilianHolidays.Controllers
             {
                 return BadRequest();
             }
+            List<Pais> paises = new List<Pais>();
+            foreach (var pais in feriado.Paises)
+            {
+                paises.Add(_context.Paises.Find(pais.Id));
+            }
+            feriado.Ano = feriado.Data.Value.Year;
+            feriado.Paises = paises;
 
             _context.Entry(feriado).State = EntityState.Modified;
 
@@ -90,30 +119,17 @@ namespace NationalBrazilianHolidays.Controllers
           {
               return Problem("Entity set 'DataBaseContext.Feriados'  is null.");
           }
+          List<Pais> paises = new List<Pais>();
+          foreach(var pais in feriado.Paises  )
+            {
+                paises.Add(_context.Paises.Find(pais.Id));
+            }
+            feriado.Ano = feriado.Data.Value.Year;
+            feriado.Paises = paises;
             _context.Feriados.Add(feriado);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetFeriado", new { id = feriado.Id }, feriado);
-        }
-
-        // DELETE: api/Feriados/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteFeriado(long id)
-        {
-            if (_context.Feriados == null)
-            {
-                return NotFound();
-            }
-            var feriado = await _context.Feriados.FindAsync(id);
-            if (feriado == null)
-            {
-                return NotFound();
-            }
-
-            _context.Feriados.Remove(feriado);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
         private bool FeriadoExists(long id)

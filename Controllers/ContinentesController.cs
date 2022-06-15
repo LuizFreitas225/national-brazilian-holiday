@@ -96,26 +96,6 @@ namespace NationalBrazilianHolidays.Controllers
             return CreatedAtAction("GetContinente", new { id = continente.Id }, continente);
         }
 
-        // DELETE: api/Continentes/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteContinente(long id)
-        {
-            if (_context.Continentes == null)
-            {
-                return NotFound();
-            }
-            var continente = await _context.Continentes.FindAsync(id);
-            if (continente == null)
-            {
-                return NotFound();
-            }
-
-            _context.Continentes.Remove(continente);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
         private bool ContinenteExists(long id)
         {
             return (_context.Continentes?.Any(e => e.Id == id)).GetValueOrDefault();
